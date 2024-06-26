@@ -8,8 +8,7 @@ from PADSpy.modulo1 import MatrizDeAdyacencia
 st.set_page_config(layout="wide")
 
 # Configurar Streamlit
-st.title("Simulador de Intervención en Matriz de Adyacencia")
-
+st.title("Simulador de Intervención en nuestro sistema")
 
 # Leer la matriz de adyacencia
 matriz_original = pd.read_csv('matriz_adjacencia.csv')
@@ -30,7 +29,7 @@ perturbacion = st.sidebar.slider("Perturbación", min_value=0.00000001, max_valu
 # Crear el vector de intervención
 vector_intervencion = np.zeros(n_variables)
 for i in range(n_variables):
-    intervencion = st.sidebar.selectbox(f"Intervención en {nombre_de_variables[i]}", [-1, 0, 1], index=1)
+    intervencion = st.sidebar.slider(f"Intervención en {nombre_de_variables[i]}", min_value=-1.0, max_value=1.0, step=0.1, value=0.0)
     vector_intervencion[i] = intervencion
 
 # Ejecutar la simulación con los parámetros seleccionados
@@ -39,11 +38,13 @@ matriz_con_intervencion = objeto_matriz.add_vector_intervencion()
 result = objeto_matriz.get_ultima_columna_post_intervencion()
 
 # Test de robustez
-robustez = objeto_matriz.probar_robustez(n_simulaciones, perturbacion)
+robustez, varianza = objeto_matriz.probar_robustez(n_simulaciones, perturbacion)
+
+# Calcular el error estándar de la media (SEM)
+sem = np.sqrt(varianza / n_simulaciones)
 
 # Mostrar resultados
 st.subheader("Resultados")
-
 
 # Graficar los resultados con Plotly
 fig = go.Figure()
@@ -63,7 +64,12 @@ fig.add_trace(go.Bar(
     x=nombre_de_variables,
     y=robustez,
     name='Promedio intervenciones simuladas',
-    marker_color='lightsalmon'
+    marker_color='lightsalmon',
+    error_y=dict(
+        type='data',
+        array=sem,
+        visible=True
+    )
 ))
 
 fig.update_layout(
@@ -73,9 +79,12 @@ fig.update_layout(
     yaxis_title='Valores de intervención',
     barmode='group'
 )
+
 if sum(vector_intervencion) == 0:
-    st.write("No se ha realizado ninguna intervención")
+    st.write("No se ha seleccionado ninguna intervención")
 else:
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True) 
     st.write(f"Promedio intervenciones simuladas: {robustez}")
+    st.write(f"Varianza de las intervenciones simuladas: {varianza}")
+    st.write(f"Error estándar de la media: {sem}")
     st.write(f"Intervención original: {result}")
