@@ -13,13 +13,19 @@ matriz_original = matriz_original.fillna(0)
 matriz_original = matriz_original.drop(matriz_original.columns[0], axis=1)
 # Pasar a numpy
 matriz_original = matriz_original.to_numpy()
+# Transponer la matriz
+matriz_original = matriz_original.T
+
+# Prueba
+#matriz_original = np.array([[0,0,1],[0,0,0],[0,1,0]])
+
 # Agregar en la diagonal principal -1
-np.fill_diagonal(matriz_original, -1)
+np.fill_diagonal(matriz_original, -3)
 print(matriz_original)
 
 n_variables = matriz_original.shape[0]
 # Vector de intervención de -1 a 1 en este caso son 14
-vector_intervencion = [0.2, 0.3, 0.4, 0.1, 0.2, 0.3, 0.4, 0.1, 0.2, 0.3, 0.4, 0.1, 0.2, 0.3]
+vector_intervencion = [0, 0, -1, 0, 1, 0, 0, 0, -1, 0, 0, 0, 0, 0]
 vector_intervencion = np.array(vector_intervencion)
 objeto_matriz = MatrizDeAdyacencia(matriz_original, vector_intervencion)
 
@@ -56,7 +62,7 @@ plt.ylabel('Valores de intervención')
 plt.show()
 
 # Probar la robustez de la matriz original
-vectores_intervenciones_simuladas = objeto_matriz.probar_robustez(num_muestras=3)
+vectores_intervenciones_simuladas = objeto_matriz.probar_robustez()
 # Graficar el promedio de las intervenciones simuladas versus la intervención original para ver la robustez del modelo
 # Poniendo las barras una al lado de otra para comparar
 promedio_intervenciones_simuladas = np.mean(vectores_intervenciones_simuladas, axis=0)
@@ -69,21 +75,10 @@ plt.figure(figsize=(16, 9))
 r1 = np.arange(len(vector_intervencion))
 r2 = [x + bar_width for x in r1]
 
-plt.bar(r1, vector_intervencion, width=bar_width, tick_label=nombre_de_variables, label='Intervención original')
+plt.bar(r1, ultima_columna, width=bar_width, tick_label=nombre_de_variables, label='Intervención original')
 plt.bar(r2, promedio_intervenciones_simuladas, width=bar_width, label='Promedio intervenciones simuladas')
 
 
-# Agregar lineas horizontales que permitan discriminar si la intervención es significativa o no
-# Esto se basa en el 10% de el valor mas grande y el 10% del valor mas pequeño
-maximo_valor = max(vector_intervencion)
-minimo_valor = min(vector_intervencion)
-# 10% del valor mas grande
-linea_superior = 0.1*maximo_valor
-# 10% del valor mas pequeño
-linea_inferior = -0.1*minimo_valor
-
-plt.axhline(y=linea_superior, color='r', linestyle='--', label='10% del valor más grande')
-plt.axhline(y=linea_inferior, color='g', linestyle='--', label='10% del valor más pequeño')
 # Rotar los nombres de las variables para que no se superpongan
 plt.xticks(rotation=45)
 plt.tight_layout()
