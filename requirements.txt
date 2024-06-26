@@ -1,3 +1,6 @@
 numpy
 matplotlib
 pandas
+plotly
+streamlit
+nbformat
